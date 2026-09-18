@@ -1,3 +1,276 @@
-hello world!
-halo, saya rasya akbar
-saya memilih prodi jurusan sistem informasi upj
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Perkalian Pecahan</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .container {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    padding: 35px;
+    max-width: 600px;
+    width: 100%;
+  }
+
+  h1 {
+    text-align: center;
+    color: #4a3f8f;
+    margin-bottom: 8px;
+    font-size: 1.6rem;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 0.9rem;
+    margin-bottom: 25px;
+  }
+
+  .pecahan-input {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+  }
+
+  .frac-input {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .frac-input input {
+    width: 70px;
+    padding: 10px;
+    text-align: center;
+    font-size: 1.1rem;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    transition: border 0.2s;
+  }
+
+  .frac-input input:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .frac-line {
+    width: 70px;
+    height: 3px;
+    background: #4a3f8f;
+    border-radius: 2px;
+  }
+
+  .operator {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #764ba2;
+  }
+
+  button {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102,126,234,0.5);
+  }
+
+  button:active { transform: translateY(0); }
+
+  .hasil {
+    margin-top: 30px;
+    padding: 25px;
+    background: #f8f7ff;
+    border-radius: 15px;
+    border-left: 6px solid #764ba2;
+    display: none;
+  }
+
+  .hasil.show { display: block; animation: fadeIn 0.4s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hasil h2 {
+    color: #4a3f8f;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+  }
+
+  .langkah {
+    color: #555;
+    font-size: 1rem;
+    line-height: 1.9;
+    margin-bottom: 8px;
+  }
+
+  .langkah strong { color: #764ba2; }
+
+  .jawaban {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px dashed #ccc;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #4a3f8f;
+  }
+
+  .error {
+    color: #d63031;
+    font-size: 0.9rem;
+    margin-top: 10px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>✖️ Perkalian Pecahan</h1>
+  <p class="subtitle">Masukkan dua pecahan, lihat hasil & langkahnya</p>
+
+  <div class="pecahan-input">
+    <div class="frac-input">
+      <input type="number" id="a1" value="2" placeholder="pembilang">
+      <div class="frac-line"></div>
+      <input type="number" id="b1" value="3" placeholder="penyebut">
+    </div>
+
+    <span class="operator">×</span>
+
+    <div class="frac-input">
+      <input type="number" id="a2" value="4" placeholder="pembilang">
+      <div class="frac-line"></div>
+      <input type="number" id="b2" value="5" placeholder="penyebut">
+    </div>
+  </div>
+
+  <button onclick="hitung()">Hitung Hasil</button>
+  <p class="error" id="error"></p>
+
+  <div class="hasil" id="hasil">
+    <h2>📝 Langkah Penyelesaian</h2>
+    <div class="langkah" id="langkah"></div>
+    <div class="jawaban" id="jawaban"></div>
+  </div>
+</div>
+
+<script>
+  // FPB untuk menyederhanakan pecahan
+  function fpb(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b) { [a, b] = [b, a % b]; }
+    return a;
+  }
+
+  function hitung() {
+    const a1 = parseInt(document.getElementById('a1').value);
+    const b1 = parseInt(document.getElementById('b1').value);
+    const a2 = parseInt(document.getElementById('a2').value);
+    const b2 = parseInt(document.getElementById('b2').value);
+
+    const errEl = document.getElementById('error');
+    const hasilEl = document.getElementById('hasil');
+
+    // Validasi input
+    if ([a1, b1, a2, b2].some(v => isNaN(v))) {
+      errEl.textContent = '⚠️ Semua kolom harus diisi dengan angka.';
+      errEl.style.display = 'block';
+      hasilEl.classList.remove('show');
+      return;
+    }
+
+    if (b1 === 0 || b2 === 0) {
+      errEl.textContent = '⚠️ Penyebut tidak boleh bernilai 0.';
+      errEl.style.display = 'block';
+      hasilEl.classList.remove('show');
+      return;
+    }
+
+    errEl.style.display = 'none';
+
+    // Perkalian: pembilang × pembilang, penyebut × penyebut
+    const pembilang = a1 * a2;
+    const penyebut = b1 * b2;
+
+    // Sederhanakan
+    const faktor = fpb(pembilang, penyebut);
+    let pSederhana = pembilang / faktor;
+    let qSederhana = penyebut / faktor;
+
+    // Tangani tanda negatif (jika penyebut negatif)
+    if (qSederhana < 0) {
+      pSederhana = -pSederhana;
+      qSederhana = -qSederhana;
+    }
+
+    // Tampilkan langkah
+    let langkah = `
+      <div>1️⃣ Kalikan pembilang dengan pembilang:<br>
+      <strong>${a1} × ${a2} = ${pembilang}</strong></div>
+      <div>2️⃣ Kalikan penyebut dengan penyebut:<br>
+      <strong>${b1} × ${b2} = ${penyebut}</strong></div>
+      <div>3️⃣ Hasil sementara: <strong>${pembilang}/${penyebut}</strong></div>
+    `;
+
+    if (faktor > 1) {
+      langkah += `<div>4️⃣ Sederhanakan dengan FPB = ${faktor}:<br>
+      <strong>${pembilang}/${penyebut} = ${pSederhana}/${qSederhana}</strong></div>`;
+    } else {
+      langkah += `<div>4️⃣ Pecahan sudah paling sederhana (FPB = 1).</div>`;
+    }
+
+    document.getElementById('langkah').innerHTML = langkah;
+
+    // Bentuk jawaban akhir
+    let jawabanTeks = (qSederhana === 1)
+      ? `${pSederhana}`
+      : `${pSederhana}/${qSederhana}`;
+
+    // Bentuk desimal
+    const desimal = (pembilang / penyebut).toFixed(4).replace(/\.?0+$/, '');
+
+    document.getElementById('jawaban').innerHTML =
+      `✅ Hasil: ${a1}/${b1} × ${a2}/${b2} = <span style="color:#764ba2">${jawabanTeks}</span>
+       <span style="font-size:0.85rem; color:#888; font-weight:normal;">(≈ ${desimal})</span>`;
+
+    hasilEl.classList.add('show');
+  }
+
+  // Hitung otomatis saat halaman dibuka
+  hitung();
+</script>
+
+</body>
+</html>
